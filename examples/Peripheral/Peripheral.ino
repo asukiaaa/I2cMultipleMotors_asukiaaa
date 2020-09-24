@@ -4,9 +4,12 @@
 #define MOTORS_ADDRESS 0x51
 #define NUMBER_MOTORS 3
 
+bool prohibitWriting (int index) {
+  return index % I2C_MULTIPLE_MOTORS_ARR_LEN_INFO_MOTOR == 2;
+}
 I2cMultipleMotors_asukiaaa_info motorsInfo(NUMBER_MOTORS);
 const int registerLen = I2cMultipleMotors_asukiaaa::getArrLenFromNumberMotors(NUMBER_MOTORS);
-utils_asukiaaa::wire::PeripheralHandler wirePeri(&Wire, registerLen);
+utils_asukiaaa::wire::PeripheralHandler wirePeri(&Wire, registerLen, prohibitWriting);
 unsigned long handledReceivedAt = 0;
 
 void setup() {
@@ -17,11 +20,13 @@ void setup() {
   Serial.println("Start");
 }
 
-void handleMotor(int index, I2cMultipleMotors_asukiaaa_motor_info motorInfo) {
+void handleMotor(int index, I2cMultipleMotors_asukiaaa_motor_info* motorInfo) {
   Serial.println(String(index) + ": " +
-                 String(motorInfo.reverse) + " " +
-                 String(motorInfo.brake) + " " +
-                 String(motorInfo.speed));
+                 String(motorInfo->reverse) + " " +
+                 String(motorInfo->brake) + " " +
+                 String(motorInfo->speed) + " " +
+                 String(motorInfo->byteWritable) + " " +
+                 String(motorInfo->byteReadOnly));
   // Update motor by motorInfo
 }
 
@@ -37,8 +42,10 @@ void loop() {
 
     I2cMultipleMotors_asukiaaa::parseArrToInfo(&motorsInfo, wirePeri.buffs, wirePeri.buffLen);
     for (int i = 0; i < NUMBER_MOTORS; ++i) {
-      handleMotor(i, motorsInfo.motors[i]);
+      handleMotor(i, &motorsInfo.motors[i]);
     }
   }
+  motorsInfo.motors[0].byteReadOnly = millis() / 1000 % 0xff;
+  I2cMultipleMotors_asukiaaa::putReadOnlyInfoToArr(motorsInfo, wirePeri.buffs, wirePeri.buffLen);
   delay(1);
 }

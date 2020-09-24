@@ -9,6 +9,8 @@
 #include <Arduino.h>
 #endif
 
+#define I2C_MULTIPLE_MOTORS_ARR_LEN_INFO_MOTOR 4
+
 class I2cMultipleMotors_asukiaaa_motor_info {
  public:
   I2cMultipleMotors_asukiaaa_motor_info();
@@ -16,6 +18,8 @@ class I2cMultipleMotors_asukiaaa_motor_info {
   bool reverse;
   bool brake;
   int stateRead;
+  uint8_t byteReadOnly;
+  uint8_t byteWritable;
 };
 
 class I2cMultipleMotors_asukiaaa_info {
@@ -42,10 +46,14 @@ class I2cMultipleMotors_asukiaaa {
   int write(I2cMultipleMotors_asukiaaa_info& info);
 
   static int getArrLenFromNumberMotors(int numberMotors);
-  static void parseInfoToArr(I2cMultipleMotors_asukiaaa_info& info, uint8_t* arr, uint8_t arrLen);
-  static void parseMotorInfoToArr(I2cMultipleMotors_asukiaaa_motor_info& motorInfo, uint8_t* arr, uint8_t arrLen);
-  static void parseArrToInfo(I2cMultipleMotors_asukiaaa_info* info, uint8_t* arr, uint8_t arrLen);
-  static void parseArrToMotorInfo(I2cMultipleMotors_asukiaaa_motor_info* motorInfo, uint8_t* arr, uint8_t arrLen);
+  static void parseInfoToArr(I2cMultipleMotors_asukiaaa_info& info, uint8_t* arr, uint16_t arrLen);
+  static void parseMotorInfoToArr(I2cMultipleMotors_asukiaaa_motor_info& motorInfo, uint8_t* arr, uint16_t arrLen);
+  static void parseArrToInfo(I2cMultipleMotors_asukiaaa_info* info, uint8_t* arr, uint16_t arrLen);
+  static void parseArrToMotorInfo(I2cMultipleMotors_asukiaaa_motor_info* motorInfo, uint8_t* arr, uint16_t arrLen);
+  static void putReadOnlyInfoToArr(I2cMultipleMotors_asukiaaa_info& info, uint8_t* arr, uint16_t arrLen);
+  static void putReadOnlyMotorInfoToArr(I2cMultipleMotors_asukiaaa_motor_info& motorInfo, uint8_t* arr, uint16_t arrLen);
+  static bool arrLenAvairableForMotorInfo(uint16_t index, uint16_t arrLen);
+  static bool arrLenMatchesToMotorInfo(uint16_t arrLen);
 
  private:
   TwoWire* wire;

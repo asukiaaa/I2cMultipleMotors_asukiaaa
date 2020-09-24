@@ -19,13 +19,15 @@ void loop() {
   motors.write(motorsInfo);
   motors.read(&motorsInfo);
   if (motorsInfo.stateRead == 0) {
-    Serial.println("index: reverse brake speed");
+    Serial.println("index: reverse brake speed byteWritable byteReadOnly");
     for (int i = 0; i < NUMBER_MOTORS; ++i) {
       I2cMultipleMotors_asukiaaa_motor_info motor = motorsInfo.motors[i];
       Serial.println(String(i) + ": " +
                      String(motor.reverse) + " " +
                      String(motor.brake) + " " +
-                     String(motor.speed));
+                     String(motor.speed) + " " +
+                     String(motor.byteWritable) + " " +
+                     String(motor.byteReadOnly));
     }
   } else {
     Serial.println("Cannot read because error " + String(motorsInfo.stateRead));
