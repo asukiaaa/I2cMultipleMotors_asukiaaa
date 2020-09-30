@@ -2,6 +2,7 @@
 #define I2C_MULTIPLE_MOTORS_ASUKIAAA_H
 
 #include <Wire.h>
+#include <wire_asukiaaa.h>
 
 // #define DEBUG_PRINT
 
@@ -11,56 +12,60 @@
 
 #define I2C_MULTIPLE_MOTORS_ARR_LEN_INFO_MOTOR 4
 
-class I2cMultipleMotors_asukiaaa_motor_info {
- public:
-  I2cMultipleMotors_asukiaaa_motor_info();
-  uint8_t speed;
-  bool reverse;
-  bool brake;
-  int stateRead;
-  uint8_t byteReadOnly;
-  uint8_t byteWritable;
-};
+namespace I2cMultipleMotors_asukiaaa {
+  class MotorInfo {
+   public:
+    MotorInfo();
+    uint8_t speed;
+    bool reverse;
+    bool brake;
+    int stateRead;
+    uint8_t byteReadOnly;
+    uint8_t byteWritable;
+  };
 
-class I2cMultipleMotors_asukiaaa_info {
- public:
-  I2cMultipleMotors_asukiaaa_info(uint8_t numberMotors);
-  ~I2cMultipleMotors_asukiaaa_info();
-  int setMotor(uint8_t index, uint8_t speed, bool reverse=false, bool brake=false);
-  uint8_t getNumberMotors();
+  class Info {
+   public:
+    Info(uint16_t numberMotors);
+    ~Info();
+    int setMotor(uint8_t index, uint8_t speed, bool reverse=false, bool brake=false);
+    int stateRead;
+    MotorInfo* motors;
+    const uint16_t numberMotors;
+  };
 
-  int stateRead;
-  I2cMultipleMotors_asukiaaa_motor_info* motors;
+  class PeripheralHandler: public wire_asukiaaa::PeripheralHandler {
+   public:
+    PeripheralHandler(TwoWire* wire, int numberMotors);
+    void parseToInfo(Info* info);
+  };
 
- private:
-  uint8_t numberMotors;
-};
+  class Driver {
+   public:
+    Driver(uint8_t address, uint16_t numberMotors);
+    ~Driver();
+    void setWire(TwoWire* wire);
+    void begin();
+    int read(Info* info);
+    int write(const Info& info);
+    const uint8_t address;
+    const uint16_t numberMotors;
 
-class I2cMultipleMotors_asukiaaa {
- public:
-  I2cMultipleMotors_asukiaaa(uint8_t address, uint8_t numberMotors);
-  ~I2cMultipleMotors_asukiaaa();
-  void setWire(TwoWire* wire);
-  void begin();
-  int read(I2cMultipleMotors_asukiaaa_info* info);
-  int write(I2cMultipleMotors_asukiaaa_info& info);
+   private:
+    TwoWire* wire;
+    const int buffLen;
+    uint8_t* buffs;
+  };
 
-  static int getArrLenFromNumberMotors(int numberMotors);
-  static void parseInfoToArr(I2cMultipleMotors_asukiaaa_info& info, uint8_t* arr, uint16_t arrLen);
-  static void parseMotorInfoToArr(I2cMultipleMotors_asukiaaa_motor_info& motorInfo, uint8_t* arr, uint16_t arrLen);
-  static void parseArrToInfo(I2cMultipleMotors_asukiaaa_info* info, uint8_t* arr, uint16_t arrLen);
-  static void parseArrToMotorInfo(I2cMultipleMotors_asukiaaa_motor_info* motorInfo, uint8_t* arr, uint16_t arrLen);
-  static void putReadOnlyInfoToArr(I2cMultipleMotors_asukiaaa_info& info, uint8_t* arr, uint16_t arrLen);
-  static void putReadOnlyMotorInfoToArr(I2cMultipleMotors_asukiaaa_motor_info& motorInfo, uint8_t* arr, uint16_t arrLen);
-  static bool arrLenAvairableForMotorInfo(uint16_t index, uint16_t arrLen);
-  static bool arrLenMatchesToMotorInfo(uint16_t arrLen);
-
- private:
-  TwoWire* wire;
-  uint8_t address;
-  uint8_t numberMotors;
-  int buffLen;
-  uint8_t* buffs;
-};
+  int getArrLenFromNumberMotors(int numberMotors);
+  void parseInfoToArr(const Info& info, uint8_t* arr, uint16_t arrLen);
+  void parseMotorInfoToArr(const MotorInfo& motorInfo, uint8_t* arr, uint16_t arrLen);
+  void parseArrToInfo(Info* info, uint8_t* arr, uint16_t arrLen);
+  void parseArrToMotorInfo(MotorInfo* motorInfo, uint8_t* arr, uint16_t arrLen);
+  void putReadOnlyInfoToArr(const Info& info, uint8_t* arr, uint16_t arrLen);
+  void putReadOnlyMotorInfoToArr(const MotorInfo& motorInfo, uint8_t* arr, uint16_t arrLen);
+  bool arrLenAvairableForMotorInfo(uint16_t index, uint16_t arrLen);
+  bool arrLenMatchesToMotorInfo(uint16_t arrLen);
+}
 
 #endif
