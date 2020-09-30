@@ -47,7 +47,11 @@ namespace I2cMultipleMotors_asukiaaa {
     void setWire(TwoWire* wire);
     void begin();
     int read(Info* info);
+    int readMotor(uint16_t index, MotorInfo* motorInfo);
+    int readMotor(uint16_t index, int* speed, bool* brake = NULL);
     int write(const Info& info);
+    int writeMotor(uint16_t index, const MotorInfo& motorInfo);
+    int writeMotor(uint16_t index, int speed, bool brake = false);
     const uint8_t address;
     const uint16_t numberMotors;
 

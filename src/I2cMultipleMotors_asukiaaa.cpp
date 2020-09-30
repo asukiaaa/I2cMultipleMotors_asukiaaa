@@ -85,11 +85,49 @@ namespace I2cMultipleMotors_asukiaaa {
     return wire->endTransmission();
   }
 
+  int Driver::writeMotor(uint16_t index, const MotorInfo &motorInfo) {
+    parseMotorInfoToArr(motorInfo, buffs, I2C_MULTIPLE_MOTORS_ARR_LEN_INFO_MOTOR);
+    wire->beginTransmission(address);
+    wire->write(I2C_MULTIPLE_MOTORS_ARR_LEN_INFO_MOTOR * index);
+    wire->write(buffs, I2C_MULTIPLE_MOTORS_ARR_LEN_INFO_MOTOR);
+    return wire->endTransmission();
+  }
+
+  int Driver::writeMotor(uint16_t index, int speed, bool brake) {
+    MotorInfo motorInfo;
+    int normalizedSpeed = abs(speed);
+    if (normalizedSpeed > 0xff) normalizedSpeed = 0xff;
+    motorInfo.speed = normalizedSpeed;
+    motorInfo.reverse = speed < 0;
+    motorInfo.brake = brake;
+    return writeMotor(index, motorInfo);
+  }
+
   int Driver::read(Info* info) {
     int state = wire_asukiaaa::readBytes(wire, address, 0, buffs, buffLen);
     info->stateRead = state;
     if (state != 0) return state;
     parseArrToInfo(info, buffs, buffLen);
+    return state;
+  }
+
+  int Driver::readMotor(uint16_t index, MotorInfo* motorInfo) {
+    int state = wire_asukiaaa::readBytes(wire, address, I2C_MULTIPLE_MOTORS_ARR_LEN_INFO_MOTOR * index, buffs, I2C_MULTIPLE_MOTORS_ARR_LEN_INFO_MOTOR);
+    motorInfo->stateRead = state;
+    if (state != 0) return state;
+    parseArrToMotorInfo(motorInfo, buffs, I2C_MULTIPLE_MOTORS_ARR_LEN_INFO_MOTOR);
+    return state;
+  }
+
+  int Driver::readMotor(uint16_t index, int* speed, bool* brake) {
+    MotorInfo motorInfo;
+    int state = readMotor(index, &motorInfo);
+    if (state != 0) return state;
+    *speed = motorInfo.speed;
+    if (motorInfo.reverse) *speed *= -1;
+    if (brake != NULL) {
+      *brake = motorInfo.brake;
+    }
     return state;
   }
 
