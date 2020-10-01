@@ -4,12 +4,6 @@
 #include <Wire.h>
 #include <wire_asukiaaa.h>
 
-// #define DEBUG_PRINT
-
-#ifdef DEBUG_PRINT
-#include <Arduino.h>
-#endif
-
 #define I2C_MULTIPLE_MOTORS_ARR_LEN_INFO_MOTOR 4
 
 namespace I2cMultipleMotors_asukiaaa {
