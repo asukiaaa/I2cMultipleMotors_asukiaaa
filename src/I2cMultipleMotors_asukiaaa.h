@@ -16,8 +16,7 @@ namespace I2cMultipleMotors_asukiaaa {
   class MotorInfo {
    public:
     MotorInfo();
-    uint8_t speed;
-    bool reverse;
+    int16_t speed;
     bool brake;
     int stateRead;
     uint8_t byteReadOnly;
@@ -28,7 +27,7 @@ namespace I2cMultipleMotors_asukiaaa {
    public:
     Info(uint16_t numberMotors);
     ~Info();
-    int setMotor(uint8_t index, uint8_t speed, bool reverse=false, bool brake=false);
+    int setMotor(uint8_t index, int16_t speed, bool brake=false);
     int stateRead;
     MotorInfo* motors;
     const uint16_t numberMotors;
@@ -49,10 +48,10 @@ namespace I2cMultipleMotors_asukiaaa {
     void begin();
     int read(Info* info);
     int readMotor(uint16_t index, MotorInfo* motorInfo);
-    int readMotor(uint16_t index, int* speed, bool* brake = NULL);
+    int readMotor(uint16_t index, int16_t* speed, bool* brake = NULL);
     int write(const Info& info);
     int writeMotor(uint16_t index, const MotorInfo& motorInfo);
-    int writeMotor(uint16_t index, int speed, bool brake = false);
+    int writeMotor(uint16_t index, int16_t speed, bool brake = false);
     const uint8_t address;
     const uint16_t numberMotors;
 
@@ -63,6 +62,7 @@ namespace I2cMultipleMotors_asukiaaa {
   };
 
   int getArrLenFromNumberMotors(int numberMotors);
+  int16_t normalizeSpeed(int16_t speed);
   void parseInfoToArr(const Info& info, uint8_t* arr, uint16_t arrLen);
   void parseMotorInfoToArr(const MotorInfo& motorInfo, uint8_t* arr, uint16_t arrLen);
   void parseArrToInfo(Info* info, uint8_t* arr, uint16_t arrLen);

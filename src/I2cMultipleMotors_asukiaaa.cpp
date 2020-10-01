@@ -20,7 +20,6 @@ namespace I2cMultipleMotors_asukiaaa {
 
   MotorInfo::MotorInfo() {
     speed = 0;
-    reverse = false;
     brake = false;
     stateRead = -1;
     byteReadOnly = 0;
@@ -36,12 +35,11 @@ namespace I2cMultipleMotors_asukiaaa {
     delete[] motors;
   }
 
-  int Info::setMotor(uint8_t index, uint8_t speed, bool reverse, bool brake) {
+  int Info::setMotor(uint8_t index, int16_t speed, bool brake) {
     if (index >= numberMotors) {
       return 1;
     }
-    motors[index].speed = speed;
-    motors[index].reverse = reverse;
+    motors[index].speed = normalizeSpeed(speed);
     motors[index].brake = brake;
     return 0;
   }
@@ -97,12 +95,9 @@ namespace I2cMultipleMotors_asukiaaa {
     return wire->endTransmission();
   }
 
-  int Driver::writeMotor(uint16_t index, int speed, bool brake) {
+  int Driver::writeMotor(uint16_t index, int16_t speed, bool brake) {
     MotorInfo motorInfo;
-    int normalizedSpeed = abs(speed);
-    if (normalizedSpeed > 0xff) normalizedSpeed = 0xff;
-    motorInfo.speed = normalizedSpeed;
-    motorInfo.reverse = speed < 0;
+    motorInfo.speed = normalizeSpeed(speed);
     motorInfo.brake = brake;
     return writeMotor(index, motorInfo);
   }
@@ -123,12 +118,11 @@ namespace I2cMultipleMotors_asukiaaa {
     return state;
   }
 
-  int Driver::readMotor(uint16_t index, int* speed, bool* brake) {
+  int Driver::readMotor(uint16_t index, int16_t* speed, bool* brake) {
     MotorInfo motorInfo;
     int state = readMotor(index, &motorInfo);
     if (state != 0) return state;
     *speed = motorInfo.speed;
-    if (motorInfo.reverse) *speed *= -1;
     if (brake != NULL) {
       *brake = motorInfo.brake;
     }
@@ -137,6 +131,12 @@ namespace I2cMultipleMotors_asukiaaa {
 
   int getArrLenFromNumberMotors(int numberMotors) {
     return numberMotors * I2C_MULTIPLE_MOTORS_ARR_LEN_INFO_MOTOR;
+  }
+
+  int16_t normalizeSpeed(int16_t speed) {
+    if (speed > 0xff) speed = 0xff;
+    else if (speed < -0xff) speed = -0xff;
+    return speed;
   }
 
   void parseInfoToArr(const Info& info, uint8_t* arr, uint16_t arrLen) {
@@ -152,7 +152,7 @@ namespace I2cMultipleMotors_asukiaaa {
   void parseMotorInfoToArr(const MotorInfo& motorInfo, uint8_t* arr, uint16_t arrLen) {
     if (!arrLenMatchesToMotorInfo(arrLen)) return;
     arr[0] = 0;
-    if (motorInfo.reverse) {
+    if (motorInfo.speed < 0) {
       arr[0] |= 0b1;
     }
     if (motorInfo.brake) {
@@ -160,7 +160,7 @@ namespace I2cMultipleMotors_asukiaaa {
     }
     arr[1] = motorInfo.byteWritable;
     arr[2] = motorInfo.byteReadOnly;
-    arr[3] = motorInfo.speed;
+    arr[3] = normalizeSpeed(abs(motorInfo.speed));
   }
 
   void parseArrToInfo(Info* info, uint8_t* arr, uint16_t arrLen) {
@@ -175,11 +175,14 @@ namespace I2cMultipleMotors_asukiaaa {
 
   void parseArrToMotorInfo(MotorInfo* motorInfo, uint8_t* arr, uint16_t arrLen) {
     if (!arrLenMatchesToMotorInfo(arrLen)) return;
-    motorInfo->reverse = ((arr[0] & 0b1) != 0);
+    bool reverse = ((arr[0] & 0b1) != 0);
     motorInfo->brake = ((arr[0] & 0b10) != 0);
     motorInfo->byteWritable = arr[1];
     motorInfo->byteReadOnly = arr[2];
     motorInfo->speed = arr[3];
+    if (reverse) {
+      motorInfo->speed *= -1;
+    }
   }
 
   void putReadOnlyInfoToArr(const Info& info, uint8_t* arr, uint16_t arrLen) {
