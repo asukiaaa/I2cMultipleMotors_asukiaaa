@@ -38,6 +38,7 @@ namespace I2cMultipleMotors_asukiaaa {
    public:
     PeripheralHandler(TwoWire* wire, int numberMotors);
     void parseToInfo(Info* info);
+    void putReadOnlyInfo(const Info& info);
   };
 
   class Driver {

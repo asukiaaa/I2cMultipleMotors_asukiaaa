@@ -14,6 +14,10 @@ namespace I2cMultipleMotors_asukiaaa {
     parseArrToInfo(info, buffs, buffLen);
   }
 
+  void PeripheralHandler::putReadOnlyInfo(const Info& info) {
+    putReadOnlyInfoToArr(info, buffs, buffLen);
+  }
+
   MotorInfo::MotorInfo() {
     speed = 0;
     reverse = false;
